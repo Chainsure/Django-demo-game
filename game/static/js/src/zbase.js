@@ -9,6 +9,5 @@ class AcGame{
     }
 
     start(){
-        
     }
 }
