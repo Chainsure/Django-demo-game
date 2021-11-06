@@ -10,7 +10,7 @@ class AcGameplayground{
         this.game_map = new GameMap(this);
         this.players = [];
         this.players.push(new GamePlayer(this, this.width / 2, this.height / 2, this.height * 0.05, this.height * 0.15, "white", true));
-        for(let i = 0; i < 20; ++i){
+        for(let i = 0; i < 10; ++i){
             this.players.push(new GamePlayer(this, this.width / 2, this.height / 2, this.height * 0.05, this.height * 0.15, this.get_random_color(), false));
         }
         this.start();

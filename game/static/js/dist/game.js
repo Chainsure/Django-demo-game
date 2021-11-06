@@ -59,6 +59,7 @@ class GameObjects{
     constructor(){
         AC_GAME_OBJECTS.push(this);
         this.has_called_start = false;
+        this.destroyed = false;
         this.timedelta = 0;
     }
 
@@ -79,6 +80,7 @@ class GameObjects{
         {
             if(AC_GAME_OBJECTS[i] === this)
             {
+                AC_GAME_OBJECTS[i].destroyed = true;
                 AC_GAME_OBJECTS.splice(i, 1);
                 break;
             }
@@ -88,8 +90,8 @@ class GameObjects{
 }
 
 let last_timestamp;
-
 let AC_GAME_ANIMATION = function(timestamp){
+    console.log(AC_GAME_OBJECTS.length);
     for(let i = 0; i < AC_GAME_OBJECTS.length; i++)
     {
         let obj = AC_GAME_OBJECTS[i];
@@ -219,6 +221,9 @@ class GamePlayer extends GameObjects{
             return false;
         })
         this.playground.game_map.$canvas.mousedown(function(e){
+            if(outer.destroyed){
+                return false;
+            }
             if(e.which === 3) {
                 outer.move_to(e.clientX, e.clientY);
             }
@@ -231,6 +236,9 @@ class GamePlayer extends GameObjects{
         })
 
         $(window).keydown(function(e){
+            if(outer.destroyed){
+                return false;
+            }
             if(e.which === 81){
                 outer.cur_skill = "fireball";
                 return false;
@@ -286,7 +294,7 @@ class GamePlayer extends GameObjects{
     update(){
         this.timespan += this.timedelta / 1000;
         if(!this.is_me && this.timespan > 4 && Math.random() < 1 / 300.0){
-            let select_player = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
+            let select_player = this.playground.players[(Math.floor(Math.random() * this.playground.players.length) + 1) % this.playground.players.length];
             //let select_player = this.playground.players[0];
             let tx = select_player.x + this.vx * select_player.speed * this.timedelta / 1000 * 0.3;
             let ty = select_player.y + this.vy * select_player.speed * this.timedelta / 1000 * 0.3;
@@ -400,7 +408,7 @@ class AcGameplayground{
         this.game_map = new GameMap(this);
         this.players = [];
         this.players.push(new GamePlayer(this, this.width / 2, this.height / 2, this.height * 0.05, this.height * 0.15, "white", true));
-        for(let i = 0; i < 20; ++i){
+        for(let i = 0; i < 10; ++i){
             this.players.push(new GamePlayer(this, this.width / 2, this.height / 2, this.height * 0.05, this.height * 0.15, this.get_random_color(), false));
         }
         this.start();

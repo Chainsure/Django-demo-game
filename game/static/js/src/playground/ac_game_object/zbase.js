@@ -3,6 +3,7 @@ class GameObjects{
     constructor(){
         AC_GAME_OBJECTS.push(this);
         this.has_called_start = false;
+        this.destroyed = false;
         this.timedelta = 0;
     }
 
@@ -23,6 +24,7 @@ class GameObjects{
         {
             if(AC_GAME_OBJECTS[i] === this)
             {
+                AC_GAME_OBJECTS[i].destroyed = true;
                 AC_GAME_OBJECTS.splice(i, 1);
                 break;
             }
@@ -32,7 +34,6 @@ class GameObjects{
 }
 
 let last_timestamp;
-
 let AC_GAME_ANIMATION = function(timestamp){
     for(let i = 0; i < AC_GAME_OBJECTS.length; i++)
     {

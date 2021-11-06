@@ -43,6 +43,9 @@ class GamePlayer extends GameObjects{
             return false;
         })
         this.playground.game_map.$canvas.mousedown(function(e){
+            if(outer.destroyed){
+                return false;
+            }
             if(e.which === 3) {
                 outer.move_to(e.clientX, e.clientY);
             }
@@ -55,6 +58,9 @@ class GamePlayer extends GameObjects{
         })
 
         $(window).keydown(function(e){
+            if(outer.destroyed){
+                return false;
+            }
             if(e.which === 81){
                 outer.cur_skill = "fireball";
                 return false;
@@ -110,7 +116,7 @@ class GamePlayer extends GameObjects{
     update(){
         this.timespan += this.timedelta / 1000;
         if(!this.is_me && this.timespan > 4 && Math.random() < 1 / 300.0){
-            let select_player = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
+            let select_player = this.playground.players[(Math.floor(Math.random() * this.playground.players.length) + 1) % this.playground.players.length];
             //let select_player = this.playground.players[0];
             let tx = select_player.x + this.vx * select_player.speed * this.timedelta / 1000 * 0.3;
             let ty = select_player.y + this.vy * select_player.speed * this.timedelta / 1000 * 0.3;
