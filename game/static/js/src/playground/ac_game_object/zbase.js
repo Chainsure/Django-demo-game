@@ -8,16 +8,14 @@ class GameObjects{
     }
 
     start(){ // call start when constructed
-
     }
 
     update(){ // call update every frame
-        
     }
 
     on_destroy(){ //call before destroy
-
     }
+
     destroy() { // destroy the object
         this.on_destroy();
         for(let i = 0; i < AC_GAME_OBJECTS.length; ++i)
