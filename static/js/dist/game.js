@@ -23,7 +23,6 @@ class AcGameMenu {
         this.$single_mode = this.$menu.find('.ac-game-menu-field-item-single-mode');
         this.$multi_mode = this.$menu.find('.ac-game-menu-field-item-multi-mode');
         this.$settings = this.$menu.find('.ac-game-menu-field-item-settings');
-        
         this.start();
     }
 
@@ -130,6 +129,12 @@ class GameMap extends GameObjects{
         this.render();
     }
 
+    resize(){
+        this.ctx.canvas.height = this.playground.height;
+        this.ctx.canvas.width = this.playground.width;
+        this.ctx.fillStyle = "rgba(0, 0, 0, 1)";
+        this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    }
     render()
     {
         this.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
@@ -419,6 +424,7 @@ class AcGameplayground{
     constructor(root){
         this.root = root;
         this.$playground = $('<div class="ac-game-playground"></div>');
+        this.root.$ac_game.append(this.$playground);
         this.hide();
         this.start();
     }
@@ -429,15 +435,31 @@ class AcGameplayground{
         return colors[idx];
     }
     start(){
+        let outer = this;
+        $(window).resize(function(){
+            outer.resize();
+        });
+    }
 
+    resize(){
+        console.log("resize");
+        let height = this.$playground.height();
+        let width = this.$playground.width();
+        let unit = Math.min(height / 9, width / 16);
+        this.height = unit * 9;
+        this.width = unit * 16;
+        this.scale = this.height;
+        if(this.game_map){
+            this.game_map.resize();
+        }
     }
 
     show(){ //open playground interface
         this.$playground.show();
-        this.root.$ac_game.append(this.$playground);
-        this.width = this.$playground.width();
-        this.height = this.$playground.height();
-        this.root.$ac_game.append(this.$playground);
+        this.resize();
+        //this.width = this.$playground.width();
+        //this.height = this.$playground.height();
+        //this.root.$ac_game.append(this.$playground);
         this.game_map = new GameMap(this);
         this.players = [];
         this.players.push(new GamePlayer(this, this.width / 2, this.height / 2, this.height * 0.05, this.height * 0.15, "white", true));
@@ -555,8 +577,13 @@ class Settings{
     }
 
     start(){
-        this.getinfo();
-        this.add_listening_events();
+        if(this.platform === "ACAPP"){
+            this.getinfo_acapp();
+        }
+        else{
+            this.getinfo_web();
+            this.add_listening_events();
+        }
     }
 
     add_listening_events(){
@@ -676,7 +703,37 @@ class Settings{
         this.$login.show();
     }
 
-    getinfo(){
+    acapp_login(appid, redirect_uri, scope, state){
+        let outer = this;
+        this.root.AcwingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp){
+            console.log(resp);
+            if(resp.result === "success"){
+                outer.username = resp.username;
+                outer.photo = resp.photo;
+                outer.hide();
+                outer.root.menu.show();
+            }
+        });
+    }
+
+    getinfo_acapp() {
+        let outer = this;
+        $.ajax({
+            url: "https://app198.acapp.acwing.com.cn/settings/acwing/acapp/apply_code/",
+            type: "GET",
+            success: function(resp){
+                if(resp.result === "success"){
+                    console.log(resp.appid);
+                    console.log(resp.redirect_uri);
+                    console.log(resp.scope);
+                    console.log(resp.state);
+                    outer.acapp_login(resp.appid, resp.redirect_uri, resp.scope, resp.state);
+                }
+            },
+        });
+    }
+
+    getinfo_web(){
         let outer = this;
 
         $.ajax({
@@ -687,9 +744,9 @@ class Settings{
             },
             success: function(resp) {
                 console.log(resp);
-                outer.username = resp.username;
-                outer.photo = resp.photo;
                 if(resp.result === "success"){
+                    outer.username = resp.username;
+                    outer.photo = resp.photo;
                     outer.hide();
                     outer.root.menu.show();
                 }

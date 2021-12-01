@@ -102,7 +102,7 @@ class Settings{
     }
 
     start(){
-        if(platform === "ACAPP"){
+        if(this.platform === "ACAPP"){
             this.getinfo_acapp();
         }
         else{
@@ -229,14 +229,14 @@ class Settings{
     }
 
     acapp_login(appid, redirect_uri, scope, state){
-        let outer = this
+        let outer = this;
         this.root.AcwingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp){
             console.log(resp);
             if(resp.result === "success"){
                 outer.username = resp.username;
                 outer.photo = resp.photo;
                 outer.hide();
-                this.root.menu.show();
+                outer.root.menu.show();
             }
         });
     }
@@ -248,6 +248,10 @@ class Settings{
             type: "GET",
             success: function(resp){
                 if(resp.result === "success"){
+                    console.log(resp.appid);
+                    console.log(resp.redirect_uri);
+                    console.log(resp.scope);
+                    console.log(resp.state);
                     outer.acapp_login(resp.appid, resp.redirect_uri, resp.scope, resp.state);
                 }
             },
@@ -265,9 +269,9 @@ class Settings{
             },
             success: function(resp) {
                 console.log(resp);
-                outer.username = resp.username;
-                outer.photo = resp.photo;
                 if(resp.result === "success"){
+                    outer.username = resp.username;
+                    outer.photo = resp.photo;
                     outer.hide();
                     outer.root.menu.show();
                 }

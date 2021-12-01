@@ -21,5 +21,6 @@ def apply_code(request):
         "result": "success",
         'appid': appid,
         'redirect_uri': redirect_uri,
+        'scope': scope,
         'state': state,
         })
