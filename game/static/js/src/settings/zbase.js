@@ -146,7 +146,7 @@ class Settings{
             url: "https://app198.acapp.acwing.com.cn/settings/acwing/web/apply_code/",
             type: 'GET',
             success: function(resp){
-                console.log(resp);
+                // console.log(resp);
                 if(resp.result == "success"){
                     window.location.replace(resp.apply_code_url);
                 }
@@ -168,7 +168,7 @@ class Settings{
                 password: password,
             },
             success: function(resp){
-                console.log(resp);
+                // console.log(resp);
                 if(resp.result === "success"){
                     location.reload();
                 }
@@ -185,7 +185,7 @@ class Settings{
             url:"https://app198.acapp.acwing.com.cn/settings/logout/",
             type: "GET",
             success: function(resp) {
-                console.log(resp);
+                //console.log(resp);
                 if(resp.result === "success"){
                     location.reload();
                 }
@@ -207,7 +207,7 @@ class Settings{
                 confirm_password: confirm_password,
             },
             success: function(resp) {
-                console.log(resp);
+                // console.log(resp);
                 if(resp.result === 'success'){
                     location.reload();
                 }
@@ -231,7 +231,7 @@ class Settings{
     acapp_login(appid, redirect_uri, scope, state){
         let outer = this;
         this.root.AcwingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp){
-            console.log(resp);
+            // console.log(resp);
             if(resp.result === "success"){
                 outer.username = resp.username;
                 outer.photo = resp.photo;
@@ -248,10 +248,10 @@ class Settings{
             type: "GET",
             success: function(resp){
                 if(resp.result === "success"){
-                    console.log(resp.appid);
-                    console.log(resp.redirect_uri);
-                    console.log(resp.scope);
-                    console.log(resp.state);
+                    // console.log(resp.appid);
+                    // console.log(resp.redirect_uri);
+                    // console.log(resp.scope);
+                    // console.log(resp.state);
                     outer.acapp_login(resp.appid, resp.redirect_uri, resp.scope, resp.state);
                 }
             },

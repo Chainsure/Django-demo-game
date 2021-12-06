@@ -34,11 +34,13 @@ class AcGameMenu {
         let outer = this;
         this.$single_mode.click(function(){
             outer.hide();
-            outer.root.playground.show();
+            outer.root.playground.show("single mode");
         })
 
         this.$multi_mode.click(function(){
             console.log("click multi mode");
+            outer.hide();
+            outer.root.playground.show("multi mode")
         })
 
         this.$settings.click(function(){
@@ -62,6 +64,16 @@ class GameObjects{
         this.has_called_start = false;
         this.destroyed = false;
         this.timedelta = 0;
+        this.uuid = this.create_uuid();
+    }
+
+    create_uuid(){
+        let res = "";
+        for(let i = 0; i < 10; ++i){
+            let x = Math.floor(Math.random() * 10);
+            res += x;
+        }
+        return res;
     }
 
     start(){ // call start when constructed
@@ -182,8 +194,9 @@ class particle extends GameObjects{
     }
 }
 class GamePlayer extends GameObjects{
-    constructor(playground, x, y, radius, speed, color, is_me)
+    constructor(playground, x, y, radius, speed, color, role, username, photo)
     {
+        console.log(role, username, photo);
         super();
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
@@ -199,22 +212,25 @@ class GamePlayer extends GameObjects{
         this.radius = radius;
         this.speed = speed;
         this.color = color;
-        this.is_me = is_me;
+        this.role = role;
         this.eps = 0.01;
         this.timespan = 0;
         this.cur_skill = null;
+        this.username = username;
+        this.photo = photo;
 
-        if(this.is_me){
+        if(this.role !== "robot"){
             this.img = new Image();
-            this.img.src = this.playground.root.settings.photo;
+            //this.img.src = this.playground.root.settings.photo;
+            this.img.src = this.photo;
         }
     }
 
     start(){
-        if(this.is_me){
+        if(this.role === "me"){
             this.add_listening_events();
         }
-        else{
+        else if(this.role === "robot"){
             this.random_move();
         }
     }
@@ -311,7 +327,7 @@ class GamePlayer extends GameObjects{
 
     update_move(){
         this.timespan += this.timedelta / 1000;
-        if(!this.is_me && this.timespan > 4 && Math.random() < 1 / 180.0){
+        if(!this.role === "robot" && this.timespan > 4 && Math.random() < 1 / 180.0){
             let select_player = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
             let tx = select_player.x + select_player.vx * select_player.speed * select_player.timedelta / 1000 * 0.3;
             let ty = select_player.y + select_player.vy * select_player.speed * select_player.timedelta / 1000 * 0.3;
@@ -330,7 +346,7 @@ class GamePlayer extends GameObjects{
                 this.move_length = 0;
                 this.vx = 0;
                 this.vy = 0;
-                if(!this.is_me){
+                if(this.role === "robot"){
                     this.random_move();
                 }
             }
@@ -346,7 +362,7 @@ class GamePlayer extends GameObjects{
 
     render(){
         let scale = this.playground.scale;
-        if(this.is_me){
+        if(this.role !== "robot"){
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
@@ -426,6 +442,48 @@ class FireBall extends GameObjects{
         this.ctx.fill();
     }
 }
+class MultiPlayerSocket{
+    constructor(playground){
+        this.playground = playground;
+        this.ws = new WebSocket("wss://app198.acapp.acwing.com.cn/wss/multiplayer/");
+
+        this.start();
+    }
+
+    start(){
+        this.receive();
+    }
+
+    receive() {
+        let outer = this;
+        this.ws.onmessage = function(e) {
+            let data = JSON.parse(e.data);
+            let uuid = data.uuid;
+            if(uuid === outer.uuid) return false;
+
+            let event = data.event;
+            if(event === "create player"){
+                outer.receive_create_player(uuid, data.username, data.photo);
+            }
+        };
+    }
+    send_create_player(username, photo){
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            "event": "create player",
+            "uuid": outer.uuid,
+            'username': username,
+            'photo': photo,
+        }));
+    }
+
+    receive_create_player(uuid, username, photo){
+        let player = new GamePlayer(this.playground, this.playground.width / 2 / this.playground.scale, 0.5, 0.05, 0.15, "white", "enemy", username, photo);
+        player.uuid = uuid;
+        this.playground.players.push(player);
+        console.log(this.playground.players.length);
+    }
+}
 class AcGameplayground{
     constructor(root){
         this.root = root;
@@ -459,21 +517,32 @@ class AcGameplayground{
         }
     }
 
-    show(){ //open playground interface
+    show(mode){ //open playground interface
+        let outer = this;
         this.start();
         this.$playground.show();
-        this.resize();
         //this.width = this.$playground.width();
         //this.height = this.$playground.height();
         //this.root.$ac_game.append(this.$playground);
         this.game_map = new GameMap(this);
+        this.resize();
         this.players = [];
         // GamePlayer(playground, x, y, radius, speed, color, is_me)
-        this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, "white", true));
-        for(let i = 0; i < 10; ++i){
-            this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, this.get_random_color(), false));
+        this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, "white", "me", this.root.settings.username, this.root.settings.photo));
+        if(mode === "single mode"){
+            for(let i = 0; i < 10; ++i){
+                this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, this.get_random_color(), "robot"));
+            }
         }
-        console.log(this.players.length);
+        else if(mode === "multi mode"){
+            let outer = this;
+            this.mps = new MultiPlayerSocket(this);
+            this.mps.uuid = this.players[0].uuid;
+
+            this.mps.ws.onopen = function(){
+                outer.mps.send_create_player(outer.root.settings.username, outer.root.settings.photo);
+            }
+        }
     }
 
     hide(){ //hide playground interface
@@ -628,7 +697,7 @@ class Settings{
             url: "https://app198.acapp.acwing.com.cn/settings/acwing/web/apply_code/",
             type: 'GET',
             success: function(resp){
-                console.log(resp);
+                // console.log(resp);
                 if(resp.result == "success"){
                     window.location.replace(resp.apply_code_url);
                 }
@@ -650,7 +719,7 @@ class Settings{
                 password: password,
             },
             success: function(resp){
-                console.log(resp);
+                // console.log(resp);
                 if(resp.result === "success"){
                     location.reload();
                 }
@@ -667,7 +736,7 @@ class Settings{
             url:"https://app198.acapp.acwing.com.cn/settings/logout/",
             type: "GET",
             success: function(resp) {
-                console.log(resp);
+                //console.log(resp);
                 if(resp.result === "success"){
                     location.reload();
                 }
@@ -689,7 +758,7 @@ class Settings{
                 confirm_password: confirm_password,
             },
             success: function(resp) {
-                console.log(resp);
+                // console.log(resp);
                 if(resp.result === 'success'){
                     location.reload();
                 }
@@ -713,7 +782,7 @@ class Settings{
     acapp_login(appid, redirect_uri, scope, state){
         let outer = this;
         this.root.AcwingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp){
-            console.log(resp);
+            // console.log(resp);
             if(resp.result === "success"){
                 outer.username = resp.username;
                 outer.photo = resp.photo;
@@ -730,10 +799,10 @@ class Settings{
             type: "GET",
             success: function(resp){
                 if(resp.result === "success"){
-                    console.log(resp.appid);
-                    console.log(resp.redirect_uri);
-                    console.log(resp.scope);
-                    console.log(resp.state);
+                    // console.log(resp.appid);
+                    // console.log(resp.redirect_uri);
+                    // console.log(resp.scope);
+                    // console.log(resp.state);
                     outer.acapp_login(resp.appid, resp.redirect_uri, resp.scope, resp.state);
                 }
             },

@@ -1,6 +1,7 @@
 class GamePlayer extends GameObjects{
-    constructor(playground, x, y, radius, speed, color, is_me)
+    constructor(playground, x, y, radius, speed, color, role, username, photo)
     {
+        console.log(role, username, photo);
         super();
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
@@ -16,22 +17,25 @@ class GamePlayer extends GameObjects{
         this.radius = radius;
         this.speed = speed;
         this.color = color;
-        this.is_me = is_me;
+        this.role = role;
         this.eps = 0.01;
         this.timespan = 0;
         this.cur_skill = null;
+        this.username = username;
+        this.photo = photo;
 
-        if(this.is_me){
+        if(this.role !== "robot"){
             this.img = new Image();
-            this.img.src = this.playground.root.settings.photo;
+            //this.img.src = this.playground.root.settings.photo;
+            this.img.src = this.photo;
         }
     }
 
     start(){
-        if(this.is_me){
+        if(this.role === "me"){
             this.add_listening_events();
         }
-        else{
+        else if(this.role === "robot"){
             this.random_move();
         }
     }
@@ -128,7 +132,7 @@ class GamePlayer extends GameObjects{
 
     update_move(){
         this.timespan += this.timedelta / 1000;
-        if(!this.is_me && this.timespan > 4 && Math.random() < 1 / 180.0){
+        if(!this.role === "robot" && this.timespan > 4 && Math.random() < 1 / 180.0){
             let select_player = this.playground.players[Math.floor(Math.random() * this.playground.players.length)];
             let tx = select_player.x + select_player.vx * select_player.speed * select_player.timedelta / 1000 * 0.3;
             let ty = select_player.y + select_player.vy * select_player.speed * select_player.timedelta / 1000 * 0.3;
@@ -147,7 +151,7 @@ class GamePlayer extends GameObjects{
                 this.move_length = 0;
                 this.vx = 0;
                 this.vy = 0;
-                if(!this.is_me){
+                if(this.role === "robot"){
                     this.random_move();
                 }
             }
@@ -163,7 +167,7 @@ class GamePlayer extends GameObjects{
 
     render(){
         let scale = this.playground.scale;
-        if(this.is_me){
+        if(this.role !== "robot"){
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);

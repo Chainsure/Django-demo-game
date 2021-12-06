@@ -31,21 +31,32 @@ class AcGameplayground{
         }
     }
 
-    show(){ //open playground interface
+    show(mode){ //open playground interface
+        let outer = this;
         this.start();
         this.$playground.show();
-        this.resize();
         //this.width = this.$playground.width();
         //this.height = this.$playground.height();
         //this.root.$ac_game.append(this.$playground);
         this.game_map = new GameMap(this);
+        this.resize();
         this.players = [];
         // GamePlayer(playground, x, y, radius, speed, color, is_me)
-        this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, "white", true));
-        for(let i = 0; i < 10; ++i){
-            this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, this.get_random_color(), false));
+        this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, "white", "me", this.root.settings.username, this.root.settings.photo));
+        if(mode === "single mode"){
+            for(let i = 0; i < 10; ++i){
+                this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, this.get_random_color(), "robot"));
+            }
         }
-        console.log(this.players.length);
+        else if(mode === "multi mode"){
+            let outer = this;
+            this.mps = new MultiPlayerSocket(this);
+            this.mps.uuid = this.players[0].uuid;
+
+            this.mps.ws.onopen = function(){
+                outer.mps.send_create_player(outer.root.settings.username, outer.root.settings.photo);
+            }
+        }
     }
 
     hide(){ //hide playground interface
