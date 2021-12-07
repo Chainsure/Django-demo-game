@@ -25,26 +25,42 @@ class FireBall extends GameObjects{
             this.destroy();
             return false;
         }
+        this.update_move();
+        if(this.player.role !== "enemy"){
+            this.update_attack();
+        }
+        this.render();
+    }
+
+    update_move(){
         let move_d = Math.min(this.move_length, this.speed * this.timedelta / 1000);
         this.x += this.vx * move_d;
         this.y += this.vy * move_d;
         this.move_length -= move_d;
+    }
+
+    update_attack(){
         let players = this.playground.players;
         for(let i = 0; i < players.length; ++i){
-            if(players[i] !== this.player && this.is_collision(players[i]))
+            if(players[i] !== this.player && this.is_collision(players[i])){
                 this.attack(players[i]);
+                break;
+            }
         }
-        this.render();
     }
 
     attack(player){
         let angle = Math.atan2(player.y - this.y, player.x - this.x);
         player.is_attacked(angle, this.damage);
+        if(this.playground.mode === "multi mode"){
+            this.playground.mps.send_attack(player.uuid, player.x, player.y, angle, this.damage, this.uuid);
+        }
         this.destroy();
     }
+
     is_collision(player){
-       let dist = this.get_dist(player.x, player.y, this.x, this.y);
-       return dist < this.radius + player.radius;
+        let dist = this.get_dist(player.x, player.y, this.x, this.y);
+        return dist < this.radius + player.radius;
     }
 
 
@@ -52,11 +68,21 @@ class FireBall extends GameObjects{
         let dx = x1 - x2, dy = y1 - y2;
         return Math.sqrt((dx * dx) + (dy * dy));
     }
+
     render() {
         let scale = this.playground.scale;
         this.ctx.beginPath();
         this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
+    }
+
+    on_destroy(){
+        for(let i = 0; i < this.player.fireballs.length; ++i){
+            if(this.player.fireballs[i] === this){
+                this.player.fireballs.splice(i, 1);
+                break;
+            }
+        }
     }
 }
