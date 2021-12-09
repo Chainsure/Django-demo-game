@@ -75,7 +75,7 @@ class GamePlayer extends GameObjects{
         })
         this.playground.game_map.$canvas.mousedown(function(e){
             if(outer.playground.state !== "fighting"){
-                return false;
+                return true;
             }
             if(outer.destroyed){
                 return false;
@@ -116,24 +116,39 @@ class GamePlayer extends GameObjects{
             }
         })
 
-        $(window).keydown(function(e){
+        this.playground.game_map.$canvas.keydown(function(e){
+            if(e.which === 13){
+                if(outer.playground.mode === "multi mode"){
+                    outer.playground.chat_field.show_input();
+                    return false;
+                }
+            }
+            else if(e.which === 27){
+                if(outer.playground.mode === "multi mode"){
+                    outer.playground.chat_field.hide();
+                }
+            }
+
             if(outer.playground.state !== "fighting"){
                 return true;
             }
             if(outer.destroyed){
                 return true;
             }
+
             if(e.which === 81){
                 if(outer.fireball_coldtime > outer.eps){
-                    return false;
+                    return true;
                 }
                 outer.cur_skill = "fireball";
+                return false;
             }
             else if(e.which === 70){
                 if(outer.blink_coldtime > outer.eps){
-                    return false;
+                    return true;
                 }
                 outer.cur_skill = "blink";
+                return false;
             }
         })
     }
