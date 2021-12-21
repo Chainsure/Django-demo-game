@@ -168,7 +168,6 @@ class Settings{
                 password: password,
             },
             success: function(resp){
-                // console.log(resp);
                 if(resp.result === "success"){
                     location.reload();
                 }
@@ -189,7 +188,6 @@ class Settings{
                 url:"https://app198.acapp.acwing.com.cn/settings/logout/",
                 type: "GET",
                 success: function(resp) {
-                    //console.log(resp);
                     if(resp.result === "success"){
                         location.reload();
                     }
@@ -273,7 +271,7 @@ class Settings{
                 platform: outer.platform,
             },
             success: function(resp) {
-                console.log(resp);
+                // console.log(resp);
                 if(resp.result === "success"){
                     outer.username = resp.username;
                     outer.photo = resp.photo;

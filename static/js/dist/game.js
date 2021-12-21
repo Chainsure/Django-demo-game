@@ -18,7 +18,7 @@ class AcGameMenu {
             </div>
         </div>
         `);
-        this.$menu.hide()
+        this.$menu.hide();
         this.root.$ac_game.append(this.$menu);
         this.$single_mode = this.$menu.find('.ac-game-menu-field-item-single-mode');
         this.$multi_mode = this.$menu.find('.ac-game-menu-field-item-multi-mode');
@@ -38,13 +38,11 @@ class AcGameMenu {
         })
 
         this.$multi_mode.click(function(){
-            // console.log("click multi mode");
             outer.hide();
             outer.root.playground.show("multi mode")
         })
 
         this.$settings.click(function(){
-            // console.log("click settings");
             outer.root.settings.logout_on_remote();
         })
     }
@@ -62,7 +60,7 @@ class GameObjects{
     constructor(){
         AC_GAME_OBJECTS.push(this);
         this.has_called_start = false;
-        this.destroyed = false;
+        // this.destroyed = false;
         this.timedelta = 0;
         this.uuid = this.create_uuid();
     }
@@ -91,7 +89,7 @@ class GameObjects{
         {
             if(AC_GAME_OBJECTS[i] === this)
             {
-                AC_GAME_OBJECTS[i].destroyed = true;
+                // AC_GAME_OBJECTS[i].destroyed = true;
                 AC_GAME_OBJECTS.splice(i, 1);
                 break;
             }
@@ -374,9 +372,9 @@ class GamePlayer extends GameObjects{
             if(outer.playground.state !== "fighting"){
                 return true;
             }
-            if(outer.destroyed){
+            /*if(outer.destroyed){
                 return false;
-            }
+            }*/
             let scale = outer.playground.scale
             const rect = outer.ctx.canvas.getBoundingClientRect();
             if(e.which === 3) {
@@ -429,9 +427,9 @@ class GamePlayer extends GameObjects{
             if(outer.playground.state !== "fighting"){
                 return true;
             }
-            if(outer.destroyed){
+            /*if(outer.destroyed){
                 return true;
-            }
+            }*/
 
             if(e.which === 81){
                 if(outer.fireball_coldtime > outer.eps){
@@ -1142,7 +1140,6 @@ class Settings{
                 password: password,
             },
             success: function(resp){
-                // console.log(resp);
                 if(resp.result === "success"){
                     location.reload();
                 }
@@ -1163,7 +1160,6 @@ class Settings{
                 url:"https://app198.acapp.acwing.com.cn/settings/logout/",
                 type: "GET",
                 success: function(resp) {
-                    //console.log(resp);
                     if(resp.result === "success"){
                         location.reload();
                     }
@@ -1247,7 +1243,7 @@ class Settings{
                 platform: outer.platform,
             },
             success: function(resp) {
-                console.log(resp);
+                // console.log(resp);
                 if(resp.result === "success"){
                     outer.username = resp.username;
                     outer.photo = resp.photo;

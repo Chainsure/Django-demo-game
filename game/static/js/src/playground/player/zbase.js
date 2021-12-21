@@ -77,9 +77,9 @@ class GamePlayer extends GameObjects{
             if(outer.playground.state !== "fighting"){
                 return true;
             }
-            if(outer.destroyed){
+            /*if(outer.destroyed){
                 return false;
-            }
+            }*/
             let scale = outer.playground.scale
             const rect = outer.ctx.canvas.getBoundingClientRect();
             if(e.which === 3) {
@@ -132,9 +132,9 @@ class GamePlayer extends GameObjects{
             if(outer.playground.state !== "fighting"){
                 return true;
             }
-            if(outer.destroyed){
+            /*if(outer.destroyed){
                 return true;
-            }
+            }*/
 
             if(e.which === 81){
                 if(outer.fireball_coldtime > outer.eps){

@@ -3,7 +3,7 @@ class GameObjects{
     constructor(){
         AC_GAME_OBJECTS.push(this);
         this.has_called_start = false;
-        this.destroyed = false;
+        // this.destroyed = false;
         this.timedelta = 0;
         this.uuid = this.create_uuid();
     }
@@ -32,7 +32,7 @@ class GameObjects{
         {
             if(AC_GAME_OBJECTS[i] === this)
             {
-                AC_GAME_OBJECTS[i].destroyed = true;
+                // AC_GAME_OBJECTS[i].destroyed = true;
                 AC_GAME_OBJECTS.splice(i, 1);
                 break;
             }
