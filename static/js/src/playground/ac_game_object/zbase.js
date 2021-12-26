@@ -23,6 +23,9 @@ class GameObjects{
     update(){ // call update every frame
     }
 
+    late_update(){ // call late update at the end of each frame
+    }
+
     on_destroy(){ //call before destroy
     }
 
@@ -56,6 +59,11 @@ let AC_GAME_ANIMATION = function(timestamp){
             obj.timedelta = timestamp - last_timestamp;
             obj.update();
         }
+    }
+
+    for(let i = 0; i < AC_GAME_OBJECTS.length; ++i)
+    {
+        AC_GAME_OBJECTS[i].late_update();
     }
     last_timestamp = timestamp;
     requestAnimationFrame(AC_GAME_ANIMATION);

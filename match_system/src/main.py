@@ -20,8 +20,8 @@ from asgiref.sync import async_to_sync
 from django.core.cache import cache
 
 
-queue = Queue() # 消息队列
-class Player:
+queue = Queue() # a thread safe queue to save player info from client and let pool take player from it to match
+class Player: ## the player class
     def __init__(self, score, uuid, username, photo, channel_name):
         self.score = score
         self.uuid = uuid
@@ -30,7 +30,7 @@ class Player:
         self.channel_name = channel_name
         self.waiting_time = 0 # 等待时间
 
-class Pool:
+class Pool: ## the pool to accommodate players to be matched
     def __init__(self):
         self.players = []
 
@@ -38,7 +38,7 @@ class Pool:
         self.players.append(player)
         print("Add player %d %s" % (player.score, player.username))
 
-    def check_match(self, p1, p2):
+    def check_match(self, p1, p2): ## check if 2 players can match, the match threshold is increasing by 50/s
         dt = abs(p1.score - p2.score)
         p1_max_dif = p1.waiting_time * 50
         p2_max_dif = p2.waiting_time * 50
@@ -47,9 +47,8 @@ class Pool:
     def match_success(self, ps):
         print("Match success: %s %s %s" % (ps[0].username, ps[1].username, ps[2].username))
         players = []
-        room_name = "room-%s-%s-%s" % (ps[0].uuid, ps[1].uuid, ps[2].uuid)
-        print(room_name)
-        for p in ps:
+        room_name = "room-%s-%s-%s" % (ps[0].uuid, ps[1].uuid, ps[2].uuid) 
+        for p in ps: ## fill the players with the 3 matched players, add the room name into the channel of each player
             async_to_sync(channel_layer.group_add)(room_name, p.channel_name)
             players.append({
                 "uuid": p.uuid,
@@ -57,8 +56,8 @@ class Pool:
                 "photo": p.photo,
                 "hp": 100,
             })
-        cache.set(room_name, players, 3600) 
-        for p in ps:
+        cache.set(room_name, players, 3600) ## record the room info and players with redis
+        for p in ps: ## broadcast the info of each player to others in the same room to create player
             async_to_sync(channel_layer.group_send)(
                 room_name,
                 {
@@ -70,7 +69,7 @@ class Pool:
                 }
             )
 
-    def match(self):
+    def match(self): ## check which 3 players can be matched and match them
         while len(self.players) >= 3:
             self.players = sorted(self.players, key = lambda p: p.score)
             flag = False
@@ -85,11 +84,11 @@ class Pool:
                 break
         self.increase_waiting_time()
 
-    def increase_waiting_time(self):
+    def increase_waiting_time(self): ## increase waiting time of each player in th pool
         for player in self.players:
             player.waiting_time += 1
 
-class MatchHandler:
+class MatchHandler: ## receive the info of player from client
     def add_player(self, score, uuid, username, photo, channel_name):
         player = Player(score, uuid, username, photo, channel_name)
         queue.put(player)
@@ -97,19 +96,20 @@ class MatchHandler:
 
 def get_player_from_queue():
     try:
-        return queue.get_nowait()
+        return queue.get_nowait() ## if the queue is not empty, get the item right now; if the queue is empty, throw an empty exception
     except:
         return None
 
-def worker():
+def worker(): ## a thread used to take player from queue and put it in match pool to match
     pool = Pool()
     while(True):
         player = get_player_from_queue()
+        ## if the queue is not empty, take player from the queue; or start matching and sleep
         if player:
             pool.add_player(player)
         else:
             pool.match()
-            sleep(1)
+            sleep(1) ## after each match, the thread will sleep 1s
 
 
 if __name__ == '__main__':

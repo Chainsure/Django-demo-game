@@ -235,8 +235,18 @@ class GamePlayer extends GameObjects{
         if(this.playground.state === "fighting" && this.role === "me"){
             this.update_coldtime();
         }
+        this.update_win();
         this.update_move();
         this.render();
+    }
+
+    update_win()
+    {
+        if(this.playground.state === "fighting" && this.role === "me" && this.playground.players.length === 1)
+        {
+            this.playground.state = "over";
+            this.playground.score_board.win();
+        }
     }
 
     update_coldtime(){
@@ -345,8 +355,13 @@ class GamePlayer extends GameObjects{
 
     on_destroy(){
         if(this.role === "me"){
-            this.playground.state = "over";
-            this.playground.notice_board.writeText("游戏结束");
+            // this.playground.state = "over";
+            // this.playground.notice_board.writeText("游戏结束");
+            if(this.playground.state === "fighting")
+            {
+                this.playground.state = "over";
+                this.playground.score_board.lose();
+            }
         }
         for(let i = 0; i < this.playground.players.length; ++i){
             if(this.playground.players[i] === this){

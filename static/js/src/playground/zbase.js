@@ -4,7 +4,7 @@ class AcGameplayground{
         this.$playground = $('<div class="ac-game-playground"></div>');
         this.root.$ac_game.append(this.$playground);
         this.hide();
-        //this.start();
+        this.start();
     }
 
     get_random_color(){
@@ -12,11 +12,27 @@ class AcGameplayground{
         let idx = Math.floor(Math.random() * colors.length);
         return colors[idx];
     }
+
+    create_uuid(){
+        let res = '';
+        for(let i = 0; i < 10; ++i){
+            let x = Math.floor(Math.random() * 10);
+            res += x;
+        }
+        return res;
+    }
+
     start(){
         let outer = this;
-        $(window).resize(function(){
+        let uuid = this.create_uuid();
+        $(window).on(`resize.${uuid}`,function(){
             outer.resize();
         });
+        if(this.root.AcwingOS){
+            this.root.AcwingOS.api.window.on_close(function(){
+                $(window).off(`resize.${uuid}`);
+            })
+        }
     }
 
     resize(){
@@ -33,15 +49,16 @@ class AcGameplayground{
 
     show(mode){ //open playground interface
         let outer = this;
-        this.start();
+        // this.start();
         this.$playground.show();
-        //this.width = this.$playground.width();
-        //this.height = this.$playground.height();
+        // this.width = this.$playground.width();
+        // this.height = this.$playground.height();
         //this.root.$ac_game.append(this.$playground);
         this.game_map = new GameMap(this);
         this.state = "waiting";
         this.notice_board = new NoticeBoard(this);
         this.notice_board.writeText("已就绪: 0人");
+        this.score_board = new ScoreBoard(this);
         this.playercount = 0;
         this.resize();
         this.players = [];
@@ -49,7 +66,7 @@ class AcGameplayground{
         // GamePlayer(playground, x, y, radius, speed, color, is_me)
         this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, "white", "me", this.root.settings.username, this.root.settings.photo));
         if(mode === "single mode"){
-            for(let i = 0; i < 10; ++i){
+            for(let i = 0; i < 2; ++i){
                 this.players.push(new GamePlayer(this, this.width / 2 / this.scale, 0.5, 0.05, 0.15, this.get_random_color(), "robot"));
             }
         }
@@ -66,6 +83,30 @@ class AcGameplayground{
     }
 
     hide(){ //hide playground interface
+        while(this.players && this.players.length > 0)
+        {
+            this.players[0].destroy();
+        }
+
+        if(this.game_map)
+        {
+            this.game_map.destroy();
+            this.game_map = null;
+        }
+
+        if(this.notice_board)
+        {
+            this.notice_board.destroy();
+            this.notice_board = null;
+        }
+
+        if(this.score_board)
+        {
+            this.score_board.destroy();
+            this.score_board = null;
+        }
+
+        this.$playground.empty();
         this.$playground.hide();
     }
 }
