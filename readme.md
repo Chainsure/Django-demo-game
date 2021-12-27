@@ -1,1 +1,1 @@
-#### A tremendous project !!!
+#### A Django learning demo game
